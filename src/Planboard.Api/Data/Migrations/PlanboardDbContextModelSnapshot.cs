@@ -60,6 +60,41 @@ namespace Planboard.Api.Data.Migrations
                     b.ToTable("api_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Planboard.Api.Data.Project", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_projects");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_projects_tenant_id_name");
+
+                    b.ToTable("projects", (string)null);
+                });
+
             modelBuilder.Entity("Planboard.Api.Data.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -139,6 +174,16 @@ namespace Planboard.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_api_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("Planboard.Api.Data.Project", b =>
+                {
+                    b.HasOne("Planboard.Api.Data.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_projects_tenants_tenant_id");
                 });
 
             modelBuilder.Entity("Planboard.Api.Data.User", b =>

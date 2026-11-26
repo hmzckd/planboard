@@ -4,11 +4,27 @@ namespace Planboard.Api.Data;
 
 public sealed class PlanboardDbContext(DbContextOptions<PlanboardDbContext> options) : DbContext(options)
 {
+    public Guid? TenantId { get; set; }
+
     public DbSet<Tenant> Tenants => Set<Tenant>();
 
     public DbSet<User> Users => Set<User>();
 
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
+
+    public DbSet<Project> Projects => Set<Project>();
+
+    public override void Dispose()
+    {
+        TenantId = null;
+        base.Dispose();
+    }
+
+    public override ValueTask DisposeAsync()
+    {
+        TenantId = null;
+        return base.DisposeAsync();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,6 +33,7 @@ public sealed class PlanboardDbContext(DbContextOptions<PlanboardDbContext> opti
             tenant.Property(t => t.Id).ValueGeneratedNever();
             tenant.Property(t => t.Name).HasMaxLength(100);
             tenant.HasIndex(t => t.Name).IsUnique();
+            tenant.HasQueryFilter(t => t.Id == TenantId);
         });
 
         modelBuilder.Entity<User>(user =>
@@ -27,6 +44,7 @@ public sealed class PlanboardDbContext(DbContextOptions<PlanboardDbContext> opti
             user.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
             user.HasIndex(u => u.Email).IsUnique();
             user.HasOne<Tenant>().WithMany().HasForeignKey(u => u.TenantId);
+            user.HasQueryFilter(u => u.TenantId == TenantId);
         });
 
         modelBuilder.Entity<ApiToken>(token =>
@@ -35,6 +53,16 @@ public sealed class PlanboardDbContext(DbContextOptions<PlanboardDbContext> opti
             token.Property(t => t.Name).HasMaxLength(100);
             token.HasIndex(t => t.TokenHash).IsUnique();
             token.HasOne<User>().WithMany().HasForeignKey(t => t.UserId);
+        });
+
+        modelBuilder.Entity<Project>(project =>
+        {
+            project.Property(p => p.Id).ValueGeneratedNever();
+            project.Property(p => p.Name).HasMaxLength(200);
+            project.Property(p => p.Description).HasMaxLength(2000);
+            project.HasIndex(p => new { p.TenantId, p.Name }).IsUnique();
+            project.HasOne<Tenant>().WithMany().HasForeignKey(p => p.TenantId);
+            project.HasQueryFilter(p => p.TenantId == TenantId);
         });
     }
 }

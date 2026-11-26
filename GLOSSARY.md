@@ -16,3 +16,5 @@
 | **Migration** | A versioned schema change (EF Core migrations in `src/Planboard.Api/Data/Migrations`). |
 | **API token** | A personal secret like `pb_dev_alice`, sent as `Authorization: Bearer <token>`. Only its SHA-256 hash is stored. |
 | **Tenant context** | Who is calling and for which tenant (`CurrentUser`: user id, tenant id, role), built from the token on every request. |
+| **Global query filter** | An EF Core rule that is added to every query of an entity. Ours adds `tenant_id = <current tenant>`. |
+| **Fail closed** | When the tenant is unknown, return nothing instead of everything. |

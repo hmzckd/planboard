@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Npgsql;
 
 namespace Planboard.Api.Data;
@@ -12,9 +13,13 @@ public static class DatabaseSetup
 
         services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
 
-        services.AddPooledDbContextFactory<PlanboardDbContext>((serviceProvider, options) => options
-            .UseNpgsql(serviceProvider.GetRequiredService<NpgsqlDataSource>())
-            .UseSnakeCaseNamingConvention());
+        services.AddSingleton(serviceProvider => new PooledDbContextFactory<PlanboardDbContext>(
+            new DbContextOptionsBuilder<PlanboardDbContext>()
+                .UseNpgsql(serviceProvider.GetRequiredService<NpgsqlDataSource>())
+                .UseSnakeCaseNamingConvention()
+                .Options));
+
+        services.AddScoped<IDbContextFactory<PlanboardDbContext>, TenantDbContextFactory>();
 
         return services;
     }

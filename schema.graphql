@@ -5,6 +5,15 @@ schema {
 type Query {
   ping: String! @cost(weight: "10")
   me: User @cost(weight: "10")
+  projects: [Project!]! @cost(weight: "10")
+  project(id: UUID!): Project @cost(weight: "10")
+}
+
+type Project {
+  id: UUID!
+  name: String!
+  description: String
+  createdAt: DateTime!
 }
 
 type Tenant {
