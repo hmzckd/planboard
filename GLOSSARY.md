@@ -14,3 +14,5 @@
 | **Owner role** (`planboard_owner`) | The Postgres role that owns the tables and runs migrations. |
 | **App role** (`planboard_app`) | The Postgres role the API connects with. It can read and write rows but cannot change the schema. |
 | **Migration** | A versioned schema change (EF Core migrations in `src/Planboard.Api/Data/Migrations`). |
+| **API token** | A personal secret like `pb_dev_alice`, sent as `Authorization: Bearer <token>`. Only its SHA-256 hash is stored. |
+| **Tenant context** | Who is calling and for which tenant (`CurrentUser`: user id, tenant id, role), built from the token on every request. |

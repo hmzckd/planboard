@@ -4,7 +4,47 @@ schema {
 
 type Query {
   ping: String! @cost(weight: "10")
+  me: User @cost(weight: "10")
 }
+
+type Tenant {
+  id: UUID!
+  name: String!
+  createdAt: DateTime!
+}
+
+type User {
+  tenant: Tenant! @cost(weight: "10")
+  id: UUID!
+  email: String!
+  displayName: String!
+  role: Role!
+  createdAt: DateTime!
+}
+
+"Defines when a policy shall be executed."
+enum ApplyPolicy {
+  "Before the resolver was executed."
+  BEFORE_RESOLVER
+  "After the resolver was executed."
+  AFTER_RESOLVER
+  "The policy is applied in the validation step before the execution."
+  VALIDATION
+}
+
+enum Role {
+  OWNER
+  MEMBER
+  VIEWER
+}
+
+"The `DateTime` scalar type represents a date and time with time zone offset information."
+scalar DateTime
+  @specifiedBy(url: "https://scalars.graphql.org/chillicream/date-time.html")
+
+"The `UUID` scalar type represents a Universally Unique Identifier (UUID) as defined by RFC 9562."
+scalar UUID
+  @specifiedBy(url: "https://scalars.graphql.org/chillicream/uuid.html")
 
 "The purpose of the `cost` directive is to define a `weight` for GraphQL types, fields, and arguments. Static analysis can use these weights when calculating the overall cost of a query or response."
 directive @cost(

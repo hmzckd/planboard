@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Npgsql;
@@ -28,6 +29,13 @@ public sealed class PlanboardApp : IAsyncLifetime
     public string OwnerConnectionString => ConnectionString("planboard_owner", "planboard_owner_dev");
 
     public HttpClient CreateClient() => Factory.CreateClient();
+
+    public HttpClient CreateClient(string token)
+    {
+        var client = Factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return client;
+    }
 
     public async ValueTask InitializeAsync()
     {

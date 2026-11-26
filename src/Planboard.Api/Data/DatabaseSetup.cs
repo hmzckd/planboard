@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Planboard.Api.Data;
 
@@ -9,15 +10,25 @@ public static class DatabaseSetup
         var connectionString = configuration.GetConnectionString("App")
             ?? throw new InvalidOperationException("Connection string 'App' is missing.");
 
-        services.AddPooledDbContextFactory<PlanboardDbContext>(options => options
-            .UseNpgsql(connectionString)
+        services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
+
+        services.AddPooledDbContextFactory<PlanboardDbContext>((serviceProvider, options) => options
+            .UseNpgsql(serviceProvider.GetRequiredService<NpgsqlDataSource>())
             .UseSnakeCaseNamingConvention());
 
         return services;
     }
 
-    public static async Task MigrateAsync(IConfiguration configuration)
+    public static async Task PrepareAsync(IConfiguration configuration)
     {
+        var migrate = configuration.GetValue<bool>("Database:MigrateOnStartup");
+        var seed = configuration.GetValue<bool>("Database:SeedOnStartup");
+
+        if (!migrate && !seed)
+        {
+            return;
+        }
+
         var connectionString = configuration.GetConnectionString("Owner")
             ?? throw new InvalidOperationException("Connection string 'Owner' is missing.");
 
@@ -27,6 +38,15 @@ public static class DatabaseSetup
             .Options;
 
         await using var db = new PlanboardDbContext(options);
-        await db.Database.MigrateAsync();
+
+        if (migrate)
+        {
+            await db.Database.MigrateAsync();
+        }
+
+        if (seed)
+        {
+            await DevelopmentSeeder.SeedAsync(db);
+        }
     }
 }

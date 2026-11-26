@@ -18,4 +18,9 @@ public static class GraphQLClient
         var body = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         return body;
     }
+
+    public static string? ErrorCode(this JsonElement body) =>
+        body.TryGetProperty("errors", out var errors)
+            ? errors[0].GetProperty("extensions").GetProperty("code").GetString()
+            : null;
 }
