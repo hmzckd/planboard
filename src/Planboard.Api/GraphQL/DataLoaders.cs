@@ -1,3 +1,4 @@
+using GreenDonut.Data;
 using Microsoft.EntityFrameworkCore;
 using Planboard.Api.Data;
 
@@ -30,31 +31,56 @@ public static class DataLoaders
     }
 
     [DataLoader]
-    public static async Task<ILookup<Guid, ProjectTask>> GetTasksByProjectIdAsync(
-        IReadOnlyList<Guid> projectIds,
+    public static async Task<IReadOnlyDictionary<Guid, ProjectTask>> GetTaskByIdAsync(
+        IReadOnlyList<Guid> ids,
         IDbContextFactory<PlanboardDbContext> dbFactory,
         CancellationToken cancellationToken)
     {
         await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
-        var tasks = await db.Tasks
-            .Where(t => projectIds.Contains(t.ProjectId))
-            .OrderBy(t => t.CreatedAt).ThenBy(t => t.Id)
-            .ToListAsync(cancellationToken);
-        return tasks.ToLookup(t => t.ProjectId);
+        return await db.Tasks
+            .Where(t => ids.Contains(t.Id))
+            .ToDictionaryAsync(t => t.Id, cancellationToken);
     }
 
     [DataLoader]
-    public static async Task<ILookup<Guid, Comment>> GetCommentsByTaskIdAsync(
-        IReadOnlyList<Guid> taskIds,
+    public static async Task<IReadOnlyDictionary<Guid, Comment>> GetCommentByIdAsync(
+        IReadOnlyList<Guid> ids,
         IDbContextFactory<PlanboardDbContext> dbFactory,
         CancellationToken cancellationToken)
     {
         await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
-        var comments = await db.Comments
+        return await db.Comments
+            .Where(c => ids.Contains(c.Id))
+            .ToDictionaryAsync(c => c.Id, cancellationToken);
+    }
+
+    [DataLoader]
+    public static async Task<Dictionary<Guid, Page<ProjectTask>>> GetTasksByProjectIdAsync(
+        IReadOnlyList<Guid> projectIds,
+        PagingArguments pagingArguments,
+        QueryContext<ProjectTask> query,
+        IDbContextFactory<PlanboardDbContext> dbFactory,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .Where(t => projectIds.Contains(t.ProjectId))
+            .With(query, sort => sort.IfEmpty(s => s.AddAscending(t => t.CreatedAt).AddAscending(t => t.Id)))
+            .ToBatchPageAsync(t => t.ProjectId, pagingArguments, cancellationToken);
+    }
+
+    [DataLoader]
+    public static async Task<Dictionary<Guid, Page<Comment>>> GetCommentsByTaskIdAsync(
+        IReadOnlyList<Guid> taskIds,
+        PagingArguments pagingArguments,
+        IDbContextFactory<PlanboardDbContext> dbFactory,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+        return await db.Comments
             .Where(c => taskIds.Contains(c.TaskId))
             .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
-            .ToListAsync(cancellationToken);
-        return comments.ToLookup(c => c.TaskId);
+            .ToBatchPageAsync(c => c.TaskId, pagingArguments, cancellationToken);
     }
 
     [DataLoader]

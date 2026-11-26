@@ -22,6 +22,20 @@ builder.Services
     .AddAuthorization()
     .RegisterDbContextFactory<PlanboardDbContext>()
     .AddApiTypes()
+    .AddGlobalObjectIdentification()
+    .AddPagingArguments()
+    .ModifyCostOptions(options =>
+    {
+        options.MaxFieldCost = 10_000;
+        options.MaxTypeCost = 10_000;
+    })
+    .ModifyPagingOptions(options =>
+    {
+        options.DefaultPageSize = 20;
+        options.MaxPageSize = 50;
+        options.IncludeTotalCount = false;
+        options.AllowBackwardPagination = false;
+    })
     .ModifyServerOptions(options => options.Tool.ServeMode = ServeMode.Embedded);
 
 var app = builder.Build();

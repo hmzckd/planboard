@@ -8,13 +8,11 @@ namespace Planboard.Tests;
 
 public class TenantIsolationTests(PlanboardApp app)
 {
-    private const string ProjectsQuery = "{ projects { id name } }";
-
     [Fact]
     public async Task Projects_returns_only_the_callers_tenant()
     {
-        var acme = await ProjectsOf(Tokens.AcmeOwner);
-        var globex = await ProjectsOf(Tokens.GlobexOwner);
+        var acme = await app.ProjectsOf(Tokens.AcmeOwner);
+        var globex = await app.ProjectsOf(Tokens.GlobexOwner);
 
         Assert.Contains("Website redesign", acme.Values);
         Assert.DoesNotContain("Warehouse robots", acme.Values);
@@ -25,10 +23,10 @@ public class TenantIsolationTests(PlanboardApp app)
     [Fact]
     public async Task Project_by_id_of_another_tenant_is_null()
     {
-        var globexProjectId = (await ProjectsOf(Tokens.GlobexOwner)).Keys.First();
+        var globexProjectId = (await app.ProjectsOf(Tokens.GlobexOwner)).Keys.First();
 
         var body = await app.CreateClient(Tokens.AcmeOwner).PostGraphQLAsync(
-            "query($id: UUID!) { project(id: $id) { name } }",
+            "query($id: ID!) { project(id: $id) { name } }",
             new { id = globexProjectId });
 
         Assert.Equal(JsonValueKind.Null, body.GetProperty("data").GetProperty("project").ValueKind);
@@ -37,7 +35,7 @@ public class TenantIsolationTests(PlanboardApp app)
     [Fact]
     public async Task Projects_without_a_token_is_not_authenticated()
     {
-        var body = await app.CreateClient().PostGraphQLAsync(ProjectsQuery);
+        var body = await app.CreateClient().PostGraphQLAsync("{ projects { nodes { name } } }");
 
         Assert.Equal("AUTH_NOT_AUTHENTICATED", body.ErrorCode());
     }
@@ -51,13 +49,5 @@ public class TenantIsolationTests(PlanboardApp app)
         Assert.Null(db.TenantId);
         Assert.Equal(0, await db.Projects.CountAsync(TestContext.Current.CancellationToken));
         Assert.Equal(0, await db.Users.CountAsync(TestContext.Current.CancellationToken));
-    }
-
-    private async Task<Dictionary<string, string>> ProjectsOf(string token)
-    {
-        var body = await app.CreateClient(token).PostGraphQLAsync(ProjectsQuery);
-
-        return body.GetProperty("data").GetProperty("projects").EnumerateArray()
-            .ToDictionary(p => p.GetProperty("id").GetString()!, p => p.GetProperty("name").GetString()!);
     }
 }

@@ -3,6 +3,7 @@ using Planboard.Api.Data;
 namespace Planboard.Api.GraphQL;
 
 [ObjectType<Comment>]
+[Node]
 public static partial class CommentNode
 {
     static partial void Configure(IObjectTypeDescriptor<Comment> descriptor)
@@ -17,4 +18,11 @@ public static partial class CommentNode
         IUserByIdDataLoader userById,
         CancellationToken cancellationToken) =>
         await userById.LoadRequiredAsync(comment.AuthorId, cancellationToken);
+
+    [NodeResolver]
+    public static async Task<Comment?> GetCommentByIdAsync(
+        Guid id,
+        ICommentByIdDataLoader commentById,
+        CancellationToken cancellationToken) =>
+        await commentById.LoadAsync(id, cancellationToken);
 }

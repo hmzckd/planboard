@@ -35,4 +35,14 @@ public static class GraphQLClient
         body.TryGetProperty("errors", out var errors)
             ? errors[0].GetProperty("extensions").GetProperty("code").GetString()
             : null;
+
+    public static JsonElement AssertNoErrors(this JsonElement body)
+    {
+        if (body.TryGetProperty("errors", out _))
+        {
+            Assert.Fail($"The response has errors: {body}");
+        }
+
+        return body;
+    }
 }

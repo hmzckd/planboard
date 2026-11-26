@@ -27,3 +27,8 @@
 | **Composite foreign key** | A foreign key over `(tenant_id, x_id)`. It makes cross-tenant references impossible in the database. |
 | **DataLoader** | Collects the keys that many resolvers ask for in one step and loads them with one query, then caches them for the request. |
 | **Batch** | One DataLoader call that serves many resolvers at once. |
+| **Global ID** | An opaque `ID!` such as `UHJvamVjdDo...`: base64 of `Project:<uuid>`. It names the type, so `node(id)` can fetch any object. |
+| **Node** | An object that can be fetched by its global ID through `node(id)` / `nodes(ids)` (Relay global object identification). |
+| **Connection** | A paged list: `nodes`, `edges { cursor node }` and `pageInfo { hasNextPage endCursor }`. |
+| **Keyset (cursor) pagination** | The next page starts after the last row's sort keys: `WHERE (created_at, id) > (...)`. Inserts before the cursor do not shift pages. Offset pagination would. |
+| **Query cost** | A score Hot Chocolate computes before execution from field weights and list sizes. Queries above the limit are rejected. |

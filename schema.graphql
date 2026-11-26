@@ -3,17 +3,52 @@ schema {
 }
 
 type Query {
+  "Fetches an object given its ID."
+  node("ID of the object." id: ID!): Node @cost(weight: "10")
+  "Lookup nodes by a list of IDs."
+  nodes("The list of node IDs." ids: [ID!]!): [Node]! @cost(weight: "10")
   ping: String! @cost(weight: "10")
   me: User @cost(weight: "10")
-  projects: [Project!]! @cost(weight: "10")
-  project(id: UUID!): Project @cost(weight: "10")
+  projects(
+    "Returns the first _n_ elements from the list."
+    first: Int
+    "Returns the elements in the list that come after the specified cursor."
+    after: String
+  ): ProjectsConnection
+    @listSize(
+      assumedSize: 50
+      slicingArguments: ["first"]
+      slicingArgumentDefaultValue: 20
+      sizedFields: ["edges", "nodes"]
+      requireOneSlicingArgument: false
+    )
+    @cost(weight: "10")
+  project(id: ID!): Project @cost(weight: "10")
 }
 
-type Comment {
+type Comment implements Node {
+  id: ID!
   author: User! @cost(weight: "10")
-  id: UUID!
   body: String!
   createdAt: DateTime!
+}
+
+"A connection to a list of items."
+type CommentsConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges."
+  edges: [CommentsEdge!]
+  "A flattened list of the nodes."
+  nodes: [Comment!]
+}
+
+"An edge in a connection."
+type CommentsEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of the edge."
+  node: Comment!
 }
 
 type Label {
@@ -22,20 +57,77 @@ type Label {
   color: String!
 }
 
-type Project {
-  tasks: [Task!]! @cost(weight: "10")
-  id: UUID!
+"Information about pagination in a connection."
+type PageInfo {
+  "Indicates whether more edges exist following the set defined by the clients arguments."
+  hasNextPage: Boolean!
+  "Indicates whether more edges exist prior the set defined by the clients arguments."
+  hasPreviousPage: Boolean!
+  "When paginating backwards, the cursor to continue."
+  startCursor: String
+  "When paginating forwards, the cursor to continue."
+  endCursor: String
+}
+
+type Project implements Node {
+  id: ID!
+  tasks(
+    status: TaskStatus
+    "Returns the first _n_ elements from the list."
+    first: Int
+    "Returns the elements in the list that come after the specified cursor."
+    after: String
+  ): TasksConnection
+    @listSize(
+      assumedSize: 50
+      slicingArguments: ["first"]
+      slicingArgumentDefaultValue: 20
+      sizedFields: ["edges", "nodes"]
+      requireOneSlicingArgument: false
+    )
+    @cost(weight: "10")
   name: String!
   description: String
   createdAt: DateTime!
 }
 
-type Task {
+"A connection to a list of items."
+type ProjectsConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges."
+  edges: [ProjectsEdge!]
+  "A flattened list of the nodes."
+  nodes: [Project!]
+}
+
+"An edge in a connection."
+type ProjectsEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of the edge."
+  node: Project!
+}
+
+type Task implements Node {
+  id: ID!
   project: Project! @cost(weight: "10")
   assignee: User @cost(weight: "10")
-  comments: [Comment!]! @cost(weight: "10")
+  comments(
+    "Returns the first _n_ elements from the list."
+    first: Int
+    "Returns the elements in the list that come after the specified cursor."
+    after: String
+  ): CommentsConnection
+    @listSize(
+      assumedSize: 50
+      slicingArguments: ["first"]
+      slicingArgumentDefaultValue: 20
+      sizedFields: ["edges", "nodes"]
+      requireOneSlicingArgument: false
+    )
+    @cost(weight: "10")
   labels: [Label!]! @cost(weight: "10")
-  id: UUID!
   title: String!
   description: String
   status: TaskStatus!
@@ -45,19 +137,42 @@ type Task {
   updatedAt: DateTime!
 }
 
+"A connection to a list of items."
+type TasksConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges."
+  edges: [TasksEdge!]
+  "A flattened list of the nodes."
+  nodes: [Task!]
+}
+
+"An edge in a connection."
+type TasksEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of the edge."
+  node: Task!
+}
+
 type Tenant {
   id: UUID!
   name: String!
   createdAt: DateTime!
 }
 
-type User {
+type User implements Node {
+  id: ID!
   tenant: Tenant! @cost(weight: "10")
-  id: UUID!
   email: String!
   displayName: String!
   role: Role!
   createdAt: DateTime!
+}
+
+"The node interface is implemented by entities that have a global unique identifier."
+interface Node {
+  id: ID!
 }
 
 "Defines when a policy shall be executed."
@@ -111,3 +226,17 @@ directive @cost(
   | ARGUMENT_DEFINITION
   | ENUM
   | INPUT_FIELD_DEFINITION
+
+"The purpose of the `@listSize` directive is to either inform the static analysis about the size of returned lists (if that information is statically available), or to point the analysis to where to find that information."
+directive @listSize(
+  "The `assumedSize` argument can be used to statically define the maximum length of a list returned by a field."
+  assumedSize: Int
+  "The `slicingArguments` argument can be used to define which of the field's arguments with numeric type are slicing arguments, so that their value determines the size of the list returned by that field. It may specify a list of multiple slicing arguments."
+  slicingArguments: [String!]
+  "The `slicingArgumentDefaultValue` argument can be used to define a default value for a slicing argument, which is used if the argument is not present in a query."
+  slicingArgumentDefaultValue: Int
+  "The `sizedFields` argument can be used to define that the value of the `assumedSize` argument or of a slicing argument does not affect the size of a list returned by a field itself, but that of a list returned by one of its sub-fields."
+  sizedFields: [String!]
+  "The `requireOneSlicingArgument` argument can be used to inform the static analysis that it should expect that exactly one of the defined slicing arguments is present in a query. If that is not the case (i.e., if none or multiple slicing arguments are present), the static analysis may throw an error."
+  requireOneSlicingArgument: Boolean = true
+) on FIELD_DEFINITION
