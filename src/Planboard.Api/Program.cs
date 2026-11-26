@@ -2,6 +2,7 @@ using ChilliCream.Nitro.App;
 using Microsoft.EntityFrameworkCore;
 using Planboard.Api.Auth;
 using Planboard.Api.Data;
+using Planboard.Api.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,21 @@ var app = builder.Build();
 await DatabaseSetup.PrepareAsync(app.Configuration);
 
 app.UseAuthentication();
+
+if (app.Configuration.GetValue<bool>("Diagnostics:SqlCommandCountHeader"))
+{
+    app.Use(async (context, next) =>
+    {
+        var counter = new SqlCommandCounter();
+        context.Features.Set(counter);
+        context.Response.OnStarting(() =>
+        {
+            context.Response.Headers["X-Sql-Command-Count"] = counter.Count.ToString();
+            return Task.CompletedTask;
+        });
+        await next();
+    });
+}
 
 app.MapGet("/health", async (IDbContextFactory<PlanboardDbContext> dbFactory, CancellationToken cancellationToken) =>
 {

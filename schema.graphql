@@ -9,11 +9,40 @@ type Query {
   project(id: UUID!): Project @cost(weight: "10")
 }
 
+type Comment {
+  author: User! @cost(weight: "10")
+  id: UUID!
+  body: String!
+  createdAt: DateTime!
+}
+
+type Label {
+  id: UUID!
+  name: String!
+  color: String!
+}
+
 type Project {
+  tasks: [Task!]! @cost(weight: "10")
   id: UUID!
   name: String!
   description: String
   createdAt: DateTime!
+}
+
+type Task {
+  project: Project! @cost(weight: "10")
+  assignee: User @cost(weight: "10")
+  comments: [Comment!]! @cost(weight: "10")
+  labels: [Label!]! @cost(weight: "10")
+  id: UUID!
+  title: String!
+  description: String
+  status: TaskStatus!
+  priority: TaskPriority!
+  dueDate: LocalDate
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type Tenant {
@@ -47,9 +76,25 @@ enum Role {
   VIEWER
 }
 
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
 "The `DateTime` scalar type represents a date and time with time zone offset information."
 scalar DateTime
   @specifiedBy(url: "https://scalars.graphql.org/chillicream/date-time.html")
+
+"The `LocalDate` scalar type represents a date without time or time zone information."
+scalar LocalDate
+  @specifiedBy(url: "https://scalars.graphql.org/chillicream/local-date.html")
 
 "The `UUID` scalar type represents a Universally Unique Identifier (UUID) as defined by RFC 9562."
 scalar UUID

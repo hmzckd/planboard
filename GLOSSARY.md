@@ -22,3 +22,6 @@
 | **`app.tenant_id`** | The session setting the API writes on every connection open; RLS policies read it. |
 | **`SECURITY DEFINER` function** | A function that runs with its owner's rights. `authenticate_api_token` uses it to find a token before the tenant is known. |
 | **Defense in depth** | Two independent locks (EF Core filter and RLS); either one alone keeps tenants apart. |
+| **N+1 problem** | One query for a list (1) plus one more query for every item in it (N). GraphQL resolvers run per field, so nested fields cause it easily. |
+| **`X-Sql-Command-Count`** | A development-only response header with the number of SQL commands EF Core ran for the request. |
+| **Composite foreign key** | A foreign key over `(tenant_id, x_id)`. It makes cross-tenant references impossible in the database. |

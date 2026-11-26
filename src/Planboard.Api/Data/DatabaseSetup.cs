@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Npgsql;
+using Planboard.Api.Diagnostics;
 
 namespace Planboard.Api.Data;
 
@@ -25,7 +26,7 @@ public static class DatabaseSetup
         new DbContextOptionsBuilder<PlanboardDbContext>()
             .UseNpgsql(dataSource)
             .UseSnakeCaseNamingConvention()
-            .AddInterceptors(new TenantConnectionInterceptor())
+            .AddInterceptors(new TenantConnectionInterceptor(), new SqlCommandCountingInterceptor())
             .Options;
 
     public static async Task PrepareAsync(IConfiguration configuration)

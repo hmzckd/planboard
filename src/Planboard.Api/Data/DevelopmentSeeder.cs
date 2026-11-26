@@ -24,6 +24,7 @@ public static class DevelopmentSeeder
     {
         await SeedTenantsAndUsersAsync(db, cancellationToken);
         await SeedProjectsAsync(db, cancellationToken);
+        await SeedTasksAsync(db, cancellationToken);
     }
 
     private static async Task SeedTenantsAndUsersAsync(PlanboardDbContext db, CancellationToken cancellationToken)
@@ -94,4 +95,76 @@ public static class DevelopmentSeeder
 
         await db.SaveChangesAsync(cancellationToken);
     }
+
+    private static async Task SeedTasksAsync(PlanboardDbContext db, CancellationToken cancellationToken)
+    {
+        if (await db.Tasks.IgnoreQueryFilters().AnyAsync(cancellationToken))
+        {
+            return;
+        }
+
+        var random = new Random(42);
+        var start = DateTimeOffset.UtcNow.AddDays(-90);
+        var users = await db.Users.IgnoreQueryFilters().ToListAsync(cancellationToken);
+        var projects = await db.Projects.IgnoreQueryFilters().OrderBy(p => p.Name).ToListAsync(cancellationToken);
+        var tenantIds = projects.Select(p => p.TenantId).Distinct().ToList();
+
+        var labels = new Dictionary<Guid, List<Label>>();
+        foreach (var tenantId in tenantIds)
+        {
+            labels[tenantId] = SeedData.Labels
+                .Select(l => new Label { Id = Guid.CreateVersion7(), TenantId = tenantId, Name = l.Name, Color = l.Color })
+                .ToList();
+            db.Labels.AddRange(labels[tenantId]);
+        }
+
+        foreach (var project in projects)
+        {
+            var members = users.Where(u => u.TenantId == project.TenantId).ToList();
+            var writers = members.Where(u => u.Role != Role.Viewer).ToList();
+
+            for (var i = 0; i < TasksPerProject; i++)
+            {
+                var createdAt = start.AddMinutes(random.Next(0, 90 * 24 * 60));
+                var task = new ProjectTask
+                {
+                    Id = Guid.CreateVersion7(createdAt),
+                    TenantId = project.TenantId,
+                    ProjectId = project.Id,
+                    Title = $"{SeedData.Verbs[random.Next(SeedData.Verbs.Length)]} {SeedData.Subjects[random.Next(SeedData.Subjects.Length)]}",
+                    Status = (ProjectTaskStatus)random.Next(3),
+                    Priority = (ProjectTaskPriority)random.Next(3),
+                    AssigneeId = random.Next(10) == 0 ? null : writers[random.Next(writers.Count)].Id,
+                    DueDate = random.Next(3) == 0 ? null : DateOnly.FromDateTime(createdAt.AddDays(random.Next(3, 60)).UtcDateTime),
+                    CreatedAt = createdAt,
+                    UpdatedAt = createdAt
+                };
+                db.Tasks.Add(task);
+
+                foreach (var label in labels[project.TenantId].OrderBy(_ => random.Next()).Take(random.Next(3)))
+                {
+                    db.TaskLabels.Add(new TaskLabel { TenantId = project.TenantId, TaskId = task.Id, LabelId = label.Id });
+                }
+
+                var commentCount = random.Next(4);
+                for (var c = 0; c < commentCount; c++)
+                {
+                    var commentedAt = createdAt.AddHours(random.Next(1, 200));
+                    db.Comments.Add(new Comment
+                    {
+                        Id = Guid.CreateVersion7(commentedAt),
+                        TenantId = project.TenantId,
+                        TaskId = task.Id,
+                        AuthorId = members[random.Next(members.Count)].Id,
+                        Body = SeedData.CommentBodies[random.Next(SeedData.CommentBodies.Length)],
+                        CreatedAt = commentedAt
+                    });
+                }
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private const int TasksPerProject = 100;
 }

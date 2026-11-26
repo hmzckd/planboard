@@ -60,6 +60,84 @@ namespace Planboard.Api.Data.Migrations
                     b.ToTable("api_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Planboard.Api.Data.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_id");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("body");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_comments");
+
+                    b.HasIndex("TenantId", "AuthorId")
+                        .HasDatabaseName("ix_comments_tenant_id_author_id");
+
+                    b.HasIndex("TenantId", "TaskId")
+                        .HasDatabaseName("ix_comments_tenant_id_task_id");
+
+                    b.HasIndex("TaskId", "CreatedAt", "Id")
+                        .HasDatabaseName("ix_comments_task_id_created_at_id");
+
+                    b.ToTable("comments", (string)null);
+                });
+
+            modelBuilder.Entity("Planboard.Api.Data.Label", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("color");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_labels");
+
+                    b.HasAlternateKey("TenantId", "Id")
+                        .HasName("ak_labels_tenant_id_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_labels_tenant_id_name");
+
+                    b.ToTable("labels", (string)null);
+                });
+
             modelBuilder.Entity("Planboard.Api.Data.Project", b =>
                 {
                     b.Property<Guid>("Id")
@@ -88,11 +166,111 @@ namespace Planboard.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_projects");
 
+                    b.HasAlternateKey("TenantId", "Id")
+                        .HasName("ak_projects_tenant_id_id");
+
                     b.HasIndex("TenantId", "Name")
                         .IsUnique()
                         .HasDatabaseName("ix_projects_tenant_id_name");
 
                     b.ToTable("projects", (string)null);
+                });
+
+            modelBuilder.Entity("Planboard.Api.Data.ProjectTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AssigneeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assignee_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("description");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("priority");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tasks");
+
+                    b.HasAlternateKey("TenantId", "Id")
+                        .HasName("ak_tasks_tenant_id_id");
+
+                    b.HasIndex("TenantId", "AssigneeId")
+                        .HasDatabaseName("ix_tasks_tenant_id_assignee_id");
+
+                    b.HasIndex("TenantId", "ProjectId")
+                        .HasDatabaseName("ix_tasks_tenant_id_project_id");
+
+                    b.HasIndex("ProjectId", "CreatedAt", "Id")
+                        .HasDatabaseName("ix_tasks_project_id_created_at_id");
+
+                    b.ToTable("tasks", (string)null);
+                });
+
+            modelBuilder.Entity("Planboard.Api.Data.TaskLabel", b =>
+                {
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<Guid>("LabelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("label_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("TaskId", "LabelId")
+                        .HasName("pk_task_labels");
+
+                    b.HasIndex("TenantId", "LabelId")
+                        .HasDatabaseName("ix_task_labels_tenant_id_label_id");
+
+                    b.HasIndex("TenantId", "TaskId")
+                        .HasDatabaseName("ix_task_labels_tenant_id_task_id");
+
+                    b.ToTable("task_labels", (string)null);
                 });
 
             modelBuilder.Entity("Planboard.Api.Data.Tenant", b =>
@@ -156,12 +334,12 @@ namespace Planboard.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_users");
 
+                    b.HasAlternateKey("TenantId", "Id")
+                        .HasName("ak_users_tenant_id_id");
+
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("ix_users_email");
-
-                    b.HasIndex("TenantId")
-                        .HasDatabaseName("ix_users_tenant_id");
 
                     b.ToTable("users", (string)null);
                 });
@@ -176,6 +354,35 @@ namespace Planboard.Api.Data.Migrations
                         .HasConstraintName("fk_api_tokens_users_user_id");
                 });
 
+            modelBuilder.Entity("Planboard.Api.Data.Comment", b =>
+                {
+                    b.HasOne("Planboard.Api.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "AuthorId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_comments_users_tenant_id_author_id");
+
+                    b.HasOne("Planboard.Api.Data.ProjectTask", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "TaskId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_comments_tasks_tenant_id_task_id");
+                });
+
+            modelBuilder.Entity("Planboard.Api.Data.Label", b =>
+                {
+                    b.HasOne("Planboard.Api.Data.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_labels_tenants_tenant_id");
+                });
+
             modelBuilder.Entity("Planboard.Api.Data.Project", b =>
                 {
                     b.HasOne("Planboard.Api.Data.Tenant", null)
@@ -184,6 +391,43 @@ namespace Planboard.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_projects_tenants_tenant_id");
+                });
+
+            modelBuilder.Entity("Planboard.Api.Data.ProjectTask", b =>
+                {
+                    b.HasOne("Planboard.Api.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "AssigneeId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_tasks_users_tenant_id_assignee_id");
+
+                    b.HasOne("Planboard.Api.Data.Project", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "ProjectId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_tasks_projects_tenant_id_project_id");
+                });
+
+            modelBuilder.Entity("Planboard.Api.Data.TaskLabel", b =>
+                {
+                    b.HasOne("Planboard.Api.Data.Label", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "LabelId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_labels_labels_tenant_id_label_id");
+
+                    b.HasOne("Planboard.Api.Data.ProjectTask", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "TaskId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_labels_tasks_tenant_id_task_id");
                 });
 
             modelBuilder.Entity("Planboard.Api.Data.User", b =>
