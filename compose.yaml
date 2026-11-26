@@ -16,5 +16,18 @@ services:
       timeout: 3s
       retries: 30
 
+  app:
+    build: .
+    profiles: [app]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__App: Host=postgres;Port=5432;Database=planboard;Username=planboard_app;Password=planboard_app_dev
+      ConnectionStrings__Owner: Host=postgres;Port=5432;Database=planboard;Username=planboard_owner;Password=planboard_owner_dev
+    ports:
+      - "5080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:
