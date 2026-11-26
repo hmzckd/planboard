@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Planboard.Api/Planboard.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Planboard.Tests/Planboard.Tests.csproj" />
+  </Folder>
+</Solution>
