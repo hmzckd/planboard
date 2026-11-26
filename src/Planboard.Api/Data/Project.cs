@@ -1,6 +1,6 @@
 namespace Planboard.Api.Data;
 
-public sealed class Project
+public sealed class Project : ITenantOwned
 {
     public Guid Id { get; set; }
 

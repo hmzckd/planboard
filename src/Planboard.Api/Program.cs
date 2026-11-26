@@ -23,6 +23,7 @@ builder.Services
     .RegisterDbContextFactory<PlanboardDbContext>()
     .AddApiTypes()
     .AddGlobalObjectIdentification()
+    .AddMutationConventions(applyToAllMutations: true)
     .AddPagingArguments()
     .ModifyCostOptions(options =>
     {

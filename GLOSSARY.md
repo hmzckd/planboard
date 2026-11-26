@@ -32,3 +32,5 @@
 | **Connection** | A paged list: `nodes`, `edges { cursor node }` and `pageInfo { hasNextPage endCursor }`. |
 | **Keyset (cursor) pagination** | The next page starts after the last row's sort keys: `WHERE (created_at, id) > (...)`. Inserts before the cursor do not shift pages. Offset pagination would. |
 | **Query cost** | A score Hot Chocolate computes before execution from field weights and list sizes. Queries above the limit are rejected. |
+| **Mutation conventions** | Each mutation takes one `input` object and returns a payload with the result and an `errors` list of typed errors (`NotFoundError`, `ValidationError`, ...). |
+| **Business error** | An expected failure (not found, invalid status change). It is part of the payload, not the top-level `errors`, and the HTTP status stays 200. |

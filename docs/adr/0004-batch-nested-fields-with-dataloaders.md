@@ -32,5 +32,5 @@ security apply to them like to any other query.
 
 - The query above now runs 3 SQL commands; a deeper query with labels, comments and authors runs 6.
   `NPlusOneTests` fail if a resolver bypasses a DataLoader.
-- Lists are loaded completely per parent for now. Pagination (ADR in PB-08) limits how many rows a list returns.
+- Nested lists are paged (`first` at most 50), so one parent never loads an unbounded number of children.
 - The same key loaded at two depths (assignees, then comment authors) is two batches, not one.

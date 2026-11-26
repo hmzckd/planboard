@@ -1,5 +1,6 @@
 schema {
   query: Query
+  mutation: Mutation
 }
 
 type Query {
@@ -24,6 +25,32 @@ type Query {
     )
     @cost(weight: "10")
   project(id: ID!): Project @cost(weight: "10")
+}
+
+type Mutation {
+  createProject(input: CreateProjectInput!): CreateProjectPayload!
+    @cost(weight: "10")
+  createTask(input: CreateTaskInput!): CreateTaskPayload! @cost(weight: "10")
+  updateTask(input: UpdateTaskInput!): UpdateTaskPayload! @cost(weight: "10")
+  changeTaskStatus(input: ChangeTaskStatusInput!): ChangeTaskStatusPayload!
+    @cost(weight: "10")
+  assignTask(input: AssignTaskInput!): AssignTaskPayload! @cost(weight: "10")
+  addComment(input: AddCommentInput!): AddCommentPayload! @cost(weight: "10")
+}
+
+type AddCommentPayload {
+  comment: Comment
+  errors: [AddCommentError!]
+}
+
+type AssignTaskPayload {
+  task: Task
+  errors: [AssignTaskError!]
+}
+
+type ChangeTaskStatusPayload {
+  task: Task
+  errors: [ChangeTaskStatusError!]
 }
 
 type Comment implements Node {
@@ -51,10 +78,35 @@ type CommentsEdge {
   node: Comment!
 }
 
+type CreateProjectPayload {
+  project: Project
+  errors: [CreateProjectError!]
+}
+
+type CreateTaskPayload {
+  task: Task
+  errors: [CreateTaskError!]
+}
+
+type DuplicateNameError implements Error {
+  message: String!
+  code: String!
+}
+
+type InvalidStatusTransitionError implements Error {
+  message: String!
+  code: String!
+}
+
 type Label {
   id: UUID!
   name: String!
   color: String!
+}
+
+type NotFoundError implements Error {
+  message: String!
+  code: String!
 }
 
 "Information about pagination in a connection."
@@ -161,6 +213,11 @@ type Tenant {
   createdAt: DateTime!
 }
 
+type UpdateTaskPayload {
+  task: Task
+  errors: [UpdateTaskError!]
+}
+
 type User implements Node {
   id: ID!
   tenant: Tenant! @cost(weight: "10")
@@ -170,9 +227,68 @@ type User implements Node {
   createdAt: DateTime!
 }
 
+type ValidationError implements Error {
+  message: String!
+  code: String!
+  field: String!
+}
+
+interface Error {
+  message: String!
+}
+
 "The node interface is implemented by entities that have a global unique identifier."
 interface Node {
   id: ID!
+}
+
+union AddCommentError = ValidationError | NotFoundError
+
+union AssignTaskError = NotFoundError
+
+union ChangeTaskStatusError = NotFoundError | InvalidStatusTransitionError
+
+union CreateProjectError = ValidationError | DuplicateNameError
+
+union CreateTaskError = ValidationError | NotFoundError
+
+union UpdateTaskError = ValidationError | NotFoundError
+
+input AddCommentInput {
+  taskId: ID!
+  body: String!
+}
+
+input AssignTaskInput {
+  id: ID!
+  assigneeId: ID
+}
+
+input ChangeTaskStatusInput {
+  id: ID!
+  status: TaskStatus!
+}
+
+input CreateProjectInput {
+  name: String!
+  description: String
+}
+
+input CreateTaskInput {
+  projectId: ID!
+  title: String!
+  description: String
+  priority: TaskPriority
+  assigneeId: ID
+  dueDate: LocalDate
+}
+
+input UpdateTaskInput {
+  id: ID!
+  title: String
+  description: String
+  priority: TaskPriority
+  dueDate: LocalDate
 }
 
 "Defines when a policy shall be executed."

@@ -1,6 +1,6 @@
 namespace Planboard.Api.Data;
 
-public sealed class Label
+public sealed class Label : ITenantOwned
 {
     public Guid Id { get; set; }
 
@@ -11,7 +11,7 @@ public sealed class Label
     public required string Color { get; set; }
 }
 
-public sealed class TaskLabel
+public sealed class TaskLabel : ITenantOwned
 {
     public Guid TenantId { get; set; }
 

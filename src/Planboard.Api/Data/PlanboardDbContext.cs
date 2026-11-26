@@ -25,6 +25,34 @@ public sealed class PlanboardDbContext(DbContextOptions<PlanboardDbContext> opti
 
     public DbSet<TaskLabel> TaskLabels => Set<TaskLabel>();
 
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        StampTenant();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        StampTenant();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    private void StampTenant()
+    {
+        if (TenantId is not { } tenantId)
+        {
+            return;
+        }
+
+        foreach (var entry in ChangeTracker.Entries<ITenantOwned>())
+        {
+            if (entry.State == EntityState.Added && entry.Entity.TenantId == Guid.Empty)
+            {
+                entry.Entity.TenantId = tenantId;
+            }
+        }
+    }
+
     public override void Dispose()
     {
         TenantId = null;

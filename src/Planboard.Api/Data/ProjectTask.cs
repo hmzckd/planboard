@@ -3,7 +3,7 @@ using HotChocolate;
 namespace Planboard.Api.Data;
 
 [GraphQLName("Task")]
-public sealed class ProjectTask
+public sealed class ProjectTask : ITenantOwned
 {
     public Guid Id { get; set; }
 

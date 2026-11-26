@@ -1,6 +1,6 @@
 namespace Planboard.Api.Data;
 
-public sealed class Comment
+public sealed class Comment : ITenantOwned
 {
     public Guid Id { get; set; }
 
