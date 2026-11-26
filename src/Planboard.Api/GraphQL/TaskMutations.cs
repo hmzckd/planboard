@@ -1,4 +1,5 @@
 using HotChocolate.Authorization;
+using HotChocolate.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 using Planboard.Api.Auth;
 using Planboard.Api.Data;
@@ -19,7 +20,9 @@ public static class TaskMutations
         ProjectTaskPriority? priority,
         [ID<User>] Guid? assigneeId,
         DateOnly? dueDate,
+        CurrentUser currentUser,
         PlanboardDbContext db,
+        ITopicEventSender sender,
         CancellationToken cancellationToken)
     {
         if (!await db.Projects.AnyAsync(p => p.Id == projectId, cancellationToken))
@@ -46,6 +49,7 @@ public static class TaskMutations
 
         db.Tasks.Add(task);
         await db.SaveChangesAsync(cancellationToken);
+        await sender.PublishAsync(task, TaskChangeKind.Created, currentUser, cancellationToken);
         return task;
     }
 
@@ -58,7 +62,9 @@ public static class TaskMutations
         string? description,
         ProjectTaskPriority? priority,
         DateOnly? dueDate,
+        CurrentUser currentUser,
         PlanboardDbContext db,
+        ITopicEventSender sender,
         CancellationToken cancellationToken)
     {
         var task = await FindTaskAsync(db, id, cancellationToken);
@@ -78,6 +84,7 @@ public static class TaskMutations
         task.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+        await sender.PublishAsync(task, TaskChangeKind.Updated, currentUser, cancellationToken);
         return task;
     }
 
@@ -87,7 +94,9 @@ public static class TaskMutations
     public static async Task<ProjectTask> ChangeTaskStatusAsync(
         [ID<ProjectTask>] Guid id,
         ProjectTaskStatus status,
+        CurrentUser currentUser,
         PlanboardDbContext db,
+        ITopicEventSender sender,
         CancellationToken cancellationToken)
     {
         var task = await FindTaskAsync(db, id, cancellationToken);
@@ -97,6 +106,7 @@ public static class TaskMutations
         task.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+        await sender.PublishAsync(task, TaskChangeKind.StatusChanged, currentUser, cancellationToken);
         return task;
     }
 
@@ -105,7 +115,9 @@ public static class TaskMutations
     public static async Task<ProjectTask> AssignTaskAsync(
         [ID<ProjectTask>] Guid id,
         [ID<User>] Guid? assigneeId,
+        CurrentUser currentUser,
         PlanboardDbContext db,
+        ITopicEventSender sender,
         CancellationToken cancellationToken)
     {
         var task = await FindTaskAsync(db, id, cancellationToken);
@@ -115,6 +127,7 @@ public static class TaskMutations
         task.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+        await sender.PublishAsync(task, TaskChangeKind.Assigned, currentUser, cancellationToken);
         return task;
     }
 
@@ -126,9 +139,10 @@ public static class TaskMutations
         string body,
         CurrentUser currentUser,
         PlanboardDbContext db,
+        ITopicEventSender sender,
         CancellationToken cancellationToken)
     {
-        await FindTaskAsync(db, taskId, cancellationToken);
+        var task = await FindTaskAsync(db, taskId, cancellationToken);
 
         var comment = new Comment
         {
@@ -141,6 +155,7 @@ public static class TaskMutations
 
         db.Comments.Add(comment);
         await db.SaveChangesAsync(cancellationToken);
+        await sender.PublishAsync(task, TaskChangeKind.Commented, currentUser, cancellationToken);
         return comment;
     }
 

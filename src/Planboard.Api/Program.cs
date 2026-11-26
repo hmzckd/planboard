@@ -10,6 +10,7 @@ builder.Services.AddPlanboardDatabase(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUser>();
+builder.Services.AddSingleton<ApiTokenAuthenticator>();
 builder.Services.AddSingleton<ApiTokenIssuer>();
 
 builder.Services
@@ -25,6 +26,8 @@ builder.Services
     .AddApiTypes()
     .AddGlobalObjectIdentification()
     .AddMutationConventions(applyToAllMutations: true)
+    .AddInMemorySubscriptions()
+    .AddSocketSessionInterceptor<ApiTokenSocketSessionInterceptor>()
     .AddPagingArguments()
     .AddMaxExecutionDepthRule(8, skipIntrospectionFields: true)
     .ModifyCostOptions(options =>
@@ -77,6 +80,7 @@ app.MapGet("/health", async (IDbContextFactory<PlanboardDbContext> dbFactory, Ca
         : Results.Json(new { status = "unavailable", database = "down" }, statusCode: StatusCodes.Status503ServiceUnavailable);
 });
 
+app.UseWebSockets();
 app.MapGraphQL();
 
 app.Run();

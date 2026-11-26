@@ -42,3 +42,8 @@
 | **Field cost / type cost** | Field cost estimates the work (resolver calls), type cost the number of objects returned. Both are computed before execution; the limit for each is 10,000. |
 | **Introspection** | The `__schema` and `__type` fields that describe the schema. Used by the IDE and code generators; disabled outside `Development`. |
 | **Development environment** | `ASPNETCORE_ENVIRONMENT=Development`. Turns on introspection, the Nitro IDE, seed data and the `X-Sql-Command-Count` header. |
+| **Subscription** | A GraphQL operation that stays open and receives an event each time something changes. Planboard has one: `taskChanged(projectId)`. |
+| **`graphql-transport-ws`** | The WebSocket protocol for GraphQL: `connection_init` → `connection_ack` → `subscribe` → many `next` messages → `complete`. |
+| **`connection_init` payload** | The first WebSocket message. Browsers cannot send headers on a WebSocket, so the token travels here as `authorization`. |
+| **Topic** | A named channel for events. Each project has one, `taskChanged:<projectId>`, so events never reach another project's listeners. |
+| **In-memory subscriptions** | Topics that live in the app's memory. Simple, but only one app instance can serve them. |

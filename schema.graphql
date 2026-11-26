@@ -1,6 +1,7 @@
 schema {
   query: Query
   mutation: Mutation
+  subscription: Subscription
 }
 
 type Query {
@@ -54,6 +55,10 @@ type Mutation {
     @cost(weight: "10")
   assignTask(input: AssignTaskInput!): AssignTaskPayload! @cost(weight: "10")
   addComment(input: AddCommentInput!): AddCommentPayload! @cost(weight: "10")
+}
+
+type Subscription {
+  taskChanged(projectId: ID!): TaskChangedEvent! @cost(weight: "10")
 }
 
 type AddCommentPayload {
@@ -250,6 +255,12 @@ type Task implements Node {
   updatedAt: DateTime!
 }
 
+type TaskChangedEvent {
+  task: Task @cost(weight: "10")
+  changedBy: User @cost(weight: "10")
+  kind: TaskChangeKind!
+}
+
 "A connection to a list of items."
 type TasksConnection {
   "Information to aid in pagination."
@@ -381,6 +392,14 @@ enum Role {
   OWNER
   MEMBER
   VIEWER
+}
+
+enum TaskChangeKind {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  ASSIGNED
+  COMMENTED
 }
 
 enum TaskPriority {
