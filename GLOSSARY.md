@@ -18,3 +18,7 @@
 | **Tenant context** | Who is calling and for which tenant (`CurrentUser`: user id, tenant id, role), built from the token on every request. |
 | **Global query filter** | An EF Core rule that is added to every query of an entity. Ours adds `tenant_id = <current tenant>`. |
 | **Fail closed** | When the tenant is unknown, return nothing instead of everything. |
+| **Row-level security (RLS)** | A PostgreSQL feature that hides or blocks rows per session. Our policy allows only rows where `tenant_id = current_tenant_id()`. |
+| **`app.tenant_id`** | The session setting the API writes on every connection open; RLS policies read it. |
+| **`SECURITY DEFINER` function** | A function that runs with its owner's rights. `authenticate_api_token` uses it to find a token before the tenant is known. |
+| **Defense in depth** | Two independent locks (EF Core filter and RLS); either one alone keeps tenants apart. |

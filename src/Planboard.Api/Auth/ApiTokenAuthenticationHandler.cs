@@ -29,12 +29,7 @@ public sealed class ApiTokenAuthenticationHandler(
         var token = header[BearerPrefix.Length..].Trim();
 
         await using var command = dataSource.CreateCommand(
-            """
-            SELECT u.id, u.tenant_id, u.role
-            FROM api_tokens t
-            JOIN users u ON u.id = t.user_id
-            WHERE t.token_hash = $1
-            """);
+            "SELECT user_id, tenant_id, role FROM authenticate_api_token($1)");
         command.Parameters.Add(new NpgsqlParameter { Value = ApiTokenHasher.Hash(token) });
 
         await using var reader = await command.ExecuteReaderAsync(Context.RequestAborted);

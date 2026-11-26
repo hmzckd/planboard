@@ -1,5 +1,5 @@
-CREATE ROLE planboard_owner LOGIN PASSWORD 'planboard_owner_dev';
-CREATE ROLE planboard_app LOGIN PASSWORD 'planboard_app_dev';
+CREATE ROLE planboard_owner LOGIN BYPASSRLS PASSWORD 'planboard_owner_dev';
+CREATE ROLE planboard_app LOGIN NOBYPASSRLS PASSWORD 'planboard_app_dev';
 
 ALTER DATABASE planboard OWNER TO planboard_owner;
 ALTER SCHEMA public OWNER TO planboard_owner;

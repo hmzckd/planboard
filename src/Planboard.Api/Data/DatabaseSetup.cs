@@ -14,15 +14,19 @@ public static class DatabaseSetup
         services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
 
         services.AddSingleton(serviceProvider => new PooledDbContextFactory<PlanboardDbContext>(
-            new DbContextOptionsBuilder<PlanboardDbContext>()
-                .UseNpgsql(serviceProvider.GetRequiredService<NpgsqlDataSource>())
-                .UseSnakeCaseNamingConvention()
-                .Options));
+            CreateAppOptions(serviceProvider.GetRequiredService<NpgsqlDataSource>())));
 
         services.AddScoped<IDbContextFactory<PlanboardDbContext>, TenantDbContextFactory>();
 
         return services;
     }
+
+    public static DbContextOptions<PlanboardDbContext> CreateAppOptions(NpgsqlDataSource dataSource) =>
+        new DbContextOptionsBuilder<PlanboardDbContext>()
+            .UseNpgsql(dataSource)
+            .UseSnakeCaseNamingConvention()
+            .AddInterceptors(new TenantConnectionInterceptor())
+            .Options;
 
     public static async Task PrepareAsync(IConfiguration configuration)
     {

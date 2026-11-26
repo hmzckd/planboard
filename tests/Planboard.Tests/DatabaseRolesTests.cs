@@ -23,10 +23,17 @@ public class DatabaseRolesTests(PlanboardApp app)
         await using var connection = new NpgsqlConnection(app.AppConnectionString);
         await connection.OpenAsync(TestContext.Current.CancellationToken);
 
-        await using var command = new NpgsqlCommand(
-            "INSERT INTO tenants (id, name, created_at) VALUES (gen_random_uuid(), 'Roles test', now()) RETURNING name",
+        var tenantId = Guid.CreateVersion7();
+
+        await using var setTenant = new NpgsqlCommand("SELECT set_config('app.tenant_id', $1, false)", connection);
+        setTenant.Parameters.Add(new NpgsqlParameter { Value = tenantId.ToString() });
+        await setTenant.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+
+        await using var insert = new NpgsqlCommand(
+            "INSERT INTO tenants (id, name, created_at) VALUES ($1, 'Roles test', now()) RETURNING name",
             connection);
-        var name = await command.ExecuteScalarAsync(TestContext.Current.CancellationToken);
+        insert.Parameters.Add(new NpgsqlParameter { Value = tenantId });
+        var name = await insert.ExecuteScalarAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal("Roles test", name);
     }
