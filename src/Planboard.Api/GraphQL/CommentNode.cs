@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Planboard.Api.Data;
 
 namespace Planboard.Api.GraphQL;
@@ -15,7 +14,7 @@ public static partial class CommentNode
 
     public static async Task<User> GetAuthor(
         [Parent] Comment comment,
-        PlanboardDbContext db,
+        IUserByIdDataLoader userById,
         CancellationToken cancellationToken) =>
-        await db.Users.SingleAsync(u => u.Id == comment.AuthorId, cancellationToken);
+        await userById.LoadRequiredAsync(comment.AuthorId, cancellationToken);
 }

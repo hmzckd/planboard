@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Planboard.Api.Data;
 
 namespace Planboard.Api.GraphQL;
@@ -15,34 +14,27 @@ public static partial class TaskNode
 
     public static async Task<Project> GetProject(
         [Parent] ProjectTask task,
-        PlanboardDbContext db,
+        IProjectByIdDataLoader projectById,
         CancellationToken cancellationToken) =>
-        await db.Projects.SingleAsync(p => p.Id == task.ProjectId, cancellationToken);
+        await projectById.LoadRequiredAsync(task.ProjectId, cancellationToken);
 
     public static async Task<User?> GetAssignee(
         [Parent] ProjectTask task,
-        PlanboardDbContext db,
+        IUserByIdDataLoader userById,
         CancellationToken cancellationToken) =>
-        task.AssigneeId is null
-            ? null
-            : await db.Users.SingleOrDefaultAsync(u => u.Id == task.AssigneeId, cancellationToken);
+        task.AssigneeId is { } assigneeId
+            ? await userById.LoadAsync(assigneeId, cancellationToken)
+            : null;
 
-    public static async Task<List<Comment>> GetComments(
+    public static async Task<Comment[]> GetComments(
         [Parent] ProjectTask task,
-        PlanboardDbContext db,
+        ICommentsByTaskIdDataLoader commentsByTaskId,
         CancellationToken cancellationToken) =>
-        await db.Comments
-            .Where(c => c.TaskId == task.Id)
-            .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
-            .ToListAsync(cancellationToken);
+        await commentsByTaskId.LoadAsync(task.Id, cancellationToken) ?? [];
 
-    public static async Task<List<Label>> GetLabels(
+    public static async Task<Label[]> GetLabels(
         [Parent] ProjectTask task,
-        PlanboardDbContext db,
+        ILabelsByTaskIdDataLoader labelsByTaskId,
         CancellationToken cancellationToken) =>
-        await db.TaskLabels
-            .Where(tl => tl.TaskId == task.Id)
-            .Join(db.Labels, tl => tl.LabelId, l => l.Id, (_, l) => l)
-            .OrderBy(l => l.Name)
-            .ToListAsync(cancellationToken);
+        await labelsByTaskId.LoadAsync(task.Id, cancellationToken) ?? [];
 }

@@ -25,3 +25,5 @@
 | **N+1 problem** | One query for a list (1) plus one more query for every item in it (N). GraphQL resolvers run per field, so nested fields cause it easily. |
 | **`X-Sql-Command-Count`** | A development-only response header with the number of SQL commands EF Core ran for the request. |
 | **Composite foreign key** | A foreign key over `(tenant_id, x_id)`. It makes cross-tenant references impossible in the database. |
+| **DataLoader** | Collects the keys that many resolvers ask for in one step and loads them with one query, then caches them for the request. |
+| **Batch** | One DataLoader call that serves many resolvers at once. |
