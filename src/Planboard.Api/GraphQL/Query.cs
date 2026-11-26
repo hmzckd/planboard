@@ -31,6 +31,17 @@ public static class Query
             .ToConnectionAsync();
 
     [Authorize]
+    [UsePaging]
+    public static async Task<Connection<User>> GetMembersAsync(
+        PagingArguments pagingArguments,
+        PlanboardDbContext db,
+        CancellationToken cancellationToken) =>
+        await db.Users
+            .OrderBy(u => u.DisplayName).ThenBy(u => u.Id)
+            .ToPageAsync(pagingArguments, cancellationToken)
+            .ToConnectionAsync();
+
+    [Authorize]
     public static async Task<Project?> GetProjectAsync(
         [ID<Project>] Guid id,
         IProjectByIdDataLoader projectById,

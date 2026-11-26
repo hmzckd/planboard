@@ -24,10 +24,28 @@ type Query {
       requireOneSlicingArgument: false
     )
     @cost(weight: "10")
+  members(
+    "Returns the first _n_ elements from the list."
+    first: Int
+    "Returns the elements in the list that come after the specified cursor."
+    after: String
+  ): MembersConnection
+    @listSize(
+      assumedSize: 50
+      slicingArguments: ["first"]
+      slicingArgumentDefaultValue: 20
+      sizedFields: ["edges", "nodes"]
+      requireOneSlicingArgument: false
+    )
+    @cost(weight: "10")
   project(id: ID!): Project @cost(weight: "10")
 }
 
 type Mutation {
+  inviteMember(input: InviteMemberInput!): InviteMemberPayload!
+    @cost(weight: "10")
+  changeMemberRole(input: ChangeMemberRoleInput!): ChangeMemberRolePayload!
+    @cost(weight: "10")
   createProject(input: CreateProjectInput!): CreateProjectPayload!
     @cost(weight: "10")
   createTask(input: CreateTaskInput!): CreateTaskPayload! @cost(weight: "10")
@@ -46,6 +64,11 @@ type AddCommentPayload {
 type AssignTaskPayload {
   task: Task
   errors: [AssignTaskError!]
+}
+
+type ChangeMemberRolePayload {
+  user: User
+  errors: [ChangeMemberRoleError!]
 }
 
 type ChangeTaskStatusPayload {
@@ -88,6 +111,11 @@ type CreateTaskPayload {
   errors: [CreateTaskError!]
 }
 
+type DuplicateEmailError implements Error {
+  message: String!
+  code: String!
+}
+
 type DuplicateNameError implements Error {
   message: String!
   code: String!
@@ -98,10 +126,43 @@ type InvalidStatusTransitionError implements Error {
   code: String!
 }
 
+type InvitedMember {
+  user: User!
+  token: String!
+}
+
+type InviteMemberPayload {
+  invitedMember: InvitedMember
+  errors: [InviteMemberError!]
+}
+
 type Label {
   id: UUID!
   name: String!
   color: String!
+}
+
+type LastOwnerError implements Error {
+  message: String!
+  code: String!
+}
+
+"A connection to a list of items."
+type MembersConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges."
+  edges: [MembersEdge!]
+  "A flattened list of the nodes."
+  nodes: [User!]
+}
+
+"An edge in a connection."
+type MembersEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of the edge."
+  node: User!
 }
 
 type NotFoundError implements Error {
@@ -220,8 +281,8 @@ type UpdateTaskPayload {
 
 type User implements Node {
   id: ID!
+  email: String
   tenant: Tenant! @cost(weight: "10")
-  email: String!
   displayName: String!
   role: Role!
   createdAt: DateTime!
@@ -246,11 +307,15 @@ union AddCommentError = ValidationError | NotFoundError
 
 union AssignTaskError = NotFoundError
 
+union ChangeMemberRoleError = NotFoundError | LastOwnerError
+
 union ChangeTaskStatusError = NotFoundError | InvalidStatusTransitionError
 
 union CreateProjectError = ValidationError | DuplicateNameError
 
 union CreateTaskError = ValidationError | NotFoundError
+
+union InviteMemberError = ValidationError | DuplicateEmailError
 
 union UpdateTaskError = ValidationError | NotFoundError
 
@@ -262,6 +327,11 @@ input AddCommentInput {
 input AssignTaskInput {
   id: ID!
   assigneeId: ID
+}
+
+input ChangeMemberRoleInput {
+  userId: ID!
+  role: Role!
 }
 
 input ChangeTaskStatusInput {
@@ -281,6 +351,12 @@ input CreateTaskInput {
   priority: TaskPriority
   assigneeId: ID
   dueDate: LocalDate
+}
+
+input InviteMemberInput {
+  email: String!
+  displayName: String!
+  role: Role!
 }
 
 input UpdateTaskInput {

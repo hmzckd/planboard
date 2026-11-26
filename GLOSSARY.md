@@ -34,3 +34,7 @@
 | **Query cost** | A score Hot Chocolate computes before execution from field weights and list sizes. Queries above the limit are rejected. |
 | **Mutation conventions** | Each mutation takes one `input` object and returns a payload with the result and an `errors` list of typed errors (`NotFoundError`, `ValidationError`, ...). |
 | **Business error** | An expected failure (not found, invalid status change). It is part of the payload, not the top-level `errors`, and the HTTP status stays 200. |
+| **Role** | `OWNER` (everything, manages members), `MEMBER` (reads and writes projects, tasks, comments), `VIEWER` (reads only). |
+| **Policy** | A named ASP.NET Core authorization rule: `Writer` = owner or member, `Owner` = owner only. Used with `[Authorize(Policy = ...)]`. |
+| **Field-level authorization** | A rule on one field instead of a whole endpoint. `User.email` is visible to owners and to the user themselves. |
+| **Null propagation** | When a non-null field fails, GraphQL nulls its parent. Fields that may be hidden (like `email`) are nullable so only they become `null`. |

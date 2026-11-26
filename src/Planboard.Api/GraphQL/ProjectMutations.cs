@@ -1,6 +1,7 @@
 using HotChocolate.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Planboard.Api.Auth;
 using Planboard.Api.Data;
 using Planboard.Api.Domain;
 
@@ -9,7 +10,7 @@ namespace Planboard.Api.GraphQL;
 [MutationType]
 public static class ProjectMutations
 {
-    [Authorize]
+    [Authorize(Policy = Policies.Writer)]
     [Error<ValidationException>]
     [Error<DuplicateNameException>]
     public static async Task<Project> CreateProjectAsync(

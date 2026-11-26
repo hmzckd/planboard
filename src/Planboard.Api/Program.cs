@@ -10,12 +10,13 @@ builder.Services.AddPlanboardDatabase(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUser>();
+builder.Services.AddSingleton<ApiTokenIssuer>();
 
 builder.Services
     .AddAuthentication(ApiTokenAuthenticationHandler.SchemeName)
     .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(
         ApiTokenAuthenticationHandler.SchemeName, null);
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => options.AddPlanboardPolicies());
 
 builder.Services
     .AddGraphQLServer()

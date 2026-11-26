@@ -19,6 +19,18 @@ public static class DataLoaders
     }
 
     [DataLoader]
+    public static async Task<IReadOnlyDictionary<Guid, Tenant>> GetTenantByIdAsync(
+        IReadOnlyList<Guid> ids,
+        IDbContextFactory<PlanboardDbContext> dbFactory,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+        return await db.Tenants
+            .Where(t => ids.Contains(t.Id))
+            .ToDictionaryAsync(t => t.Id, cancellationToken);
+    }
+
+    [DataLoader]
     public static async Task<IReadOnlyDictionary<Guid, Project>> GetProjectByIdAsync(
         IReadOnlyList<Guid> ids,
         IDbContextFactory<PlanboardDbContext> dbFactory,

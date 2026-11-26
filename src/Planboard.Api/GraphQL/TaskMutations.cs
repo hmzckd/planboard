@@ -9,7 +9,7 @@ namespace Planboard.Api.GraphQL;
 [MutationType]
 public static class TaskMutations
 {
-    [Authorize]
+    [Authorize(Policy = Policies.Writer)]
     [Error<ValidationException>]
     [Error<NotFoundException>]
     public static async Task<ProjectTask> CreateTaskAsync(
@@ -49,7 +49,7 @@ public static class TaskMutations
         return task;
     }
 
-    [Authorize]
+    [Authorize(Policy = Policies.Writer)]
     [Error<ValidationException>]
     [Error<NotFoundException>]
     public static async Task<ProjectTask> UpdateTaskAsync(
@@ -81,7 +81,7 @@ public static class TaskMutations
         return task;
     }
 
-    [Authorize]
+    [Authorize(Policy = Policies.Writer)]
     [Error<NotFoundException>]
     [Error<InvalidStatusTransitionException>]
     public static async Task<ProjectTask> ChangeTaskStatusAsync(
@@ -100,7 +100,7 @@ public static class TaskMutations
         return task;
     }
 
-    [Authorize]
+    [Authorize(Policy = Policies.Writer)]
     [Error<NotFoundException>]
     public static async Task<ProjectTask> AssignTaskAsync(
         [ID<ProjectTask>] Guid id,
@@ -118,7 +118,7 @@ public static class TaskMutations
         return task;
     }
 
-    [Authorize]
+    [Authorize(Policy = Policies.Writer)]
     [Error<ValidationException>]
     [Error<NotFoundException>]
     public static async Task<Comment> AddCommentAsync(

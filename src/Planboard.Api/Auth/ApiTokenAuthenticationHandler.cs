@@ -46,7 +46,8 @@ public sealed class ApiTokenAuthenticationHandler(
             new Claim(PlanboardClaims.Role, reader.GetString(2))
         };
 
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, SchemeName));
+        var identity = new ClaimsIdentity(claims, SchemeName, PlanboardClaims.UserId, PlanboardClaims.Role);
+        var principal = new ClaimsPrincipal(identity);
         return AuthenticateResult.Success(new AuthenticationTicket(principal, SchemeName));
     }
 }
