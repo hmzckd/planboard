@@ -1,16 +1,14 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-
 namespace Planboard.Tests;
 
-public class SchemaSnapshotTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class SchemaSnapshotTests(PlanboardApp app)
 {
     [Fact]
     public async Task Schema_matches_the_committed_schema_file()
     {
-        var client = factory.CreateClient();
+        var client = app.CreateClient();
         var actual = Normalize(await client.GetStringAsync("/graphql?sdl", TestContext.Current.CancellationToken));
 
-        var path = Path.Combine(FindRepositoryRoot(), "schema.graphql");
+        var path = Path.Combine(RepositoryRoot.Path, "schema.graphql");
 
         if (Environment.GetEnvironmentVariable("UPDATE_SCHEMA") == "1")
         {
@@ -27,16 +25,4 @@ public class SchemaSnapshotTests(WebApplicationFactory<Program> factory) : IClas
 
     private static string Normalize(string schema) =>
         schema.Replace("\r\n", "\n").Trim() + "\n";
-
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Planboard.slnx")))
-        {
-            directory = directory.Parent;
-        }
-
-        return directory?.FullName ?? throw new InvalidOperationException("Planboard.slnx not found.");
-    }
 }

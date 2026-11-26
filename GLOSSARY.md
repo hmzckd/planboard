@@ -10,3 +10,7 @@
 | **Resolver** | The code that produces the value of one field. `Query.Ping()` is the resolver of the `ping` field. |
 | **SDL** | Schema Definition Language, the text format of a schema (`type Query { ping: String! }`). |
 | **Schema snapshot test** | A test that fails when the generated schema differs from `schema.graphql`, so schema changes are always deliberate. |
+| **Tenant** | One customer organization (for example Acme). Every row of tenant data carries its `tenant_id`. |
+| **Owner role** (`planboard_owner`) | The Postgres role that owns the tables and runs migrations. |
+| **App role** (`planboard_app`) | The Postgres role the API connects with. It can read and write rows but cannot change the schema. |
+| **Migration** | A versioned schema change (EF Core migrations in `src/Planboard.Api/Data/Migrations`). |

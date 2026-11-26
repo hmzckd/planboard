@@ -1,13 +1,11 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-
 namespace Planboard.Tests;
 
-public class PingTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class PingTests(PlanboardApp app)
 {
     [Fact]
     public async Task Ping_query_returns_pong()
     {
-        var client = factory.CreateClient();
+        var client = app.CreateClient();
 
         var body = await client.PostGraphQLAsync("{ ping }");
 
