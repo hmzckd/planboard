@@ -38,3 +38,7 @@
 | **Policy** | A named ASP.NET Core authorization rule: `Writer` = owner or member, `Owner` = owner only. Used with `[Authorize(Policy = ...)]`. |
 | **Field-level authorization** | A rule on one field instead of a whole endpoint. `User.email` is visible to owners and to the user themselves. |
 | **Null propagation** | When a non-null field fails, GraphQL nulls its parent. Fields that may be hidden (like `email`) are nullable so only they become `null`. |
+| **Execution depth** | How many fields are nested in a query. `{ projects { nodes { name } } }` has depth 3. Planboard rejects depth above 8. |
+| **Field cost / type cost** | Field cost estimates the work (resolver calls), type cost the number of objects returned. Both are computed before execution; the limit for each is 10,000. |
+| **Introspection** | The `__schema` and `__type` fields that describe the schema. Used by the IDE and code generators; disabled outside `Development`. |
+| **Development environment** | `ASPNETCORE_ENVIRONMENT=Development`. Turns on introspection, the Nitro IDE, seed data and the `X-Sql-Command-Count` header. |

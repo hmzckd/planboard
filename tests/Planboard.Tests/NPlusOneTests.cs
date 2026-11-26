@@ -5,7 +5,7 @@ namespace Planboard.Tests;
 public class NPlusOneTests(PlanboardApp app)
 {
     [Fact]
-    public async Task Tasks_with_assignees_load_in_three_sql_commands()
+    public async Task Tasks_with_assignees_take_one_sql_command_per_batch_not_per_row()
     {
         var (body, response) = await app.CreateClient(Tokens.AcmeOwner).PostGraphQLWithResponseAsync(
             "{ projects(first: 10) { nodes { name tasks(first: 20) { nodes { title assignee { displayName } } } } } }");
@@ -17,11 +17,11 @@ public class NPlusOneTests(PlanboardApp app)
 
         Assert.True(tasks.Count >= 140, $"Expected the seeded Acme tasks, got {tasks.Count}.");
         Assert.Contains(tasks, t => t.GetProperty("assignee").ValueKind == JsonValueKind.Object);
-        Assert.Equal(3, response.SqlCommandCount());
+        Assert.InRange(response.SqlCommandCount(), 3, 6);
     }
 
     [Fact]
-    public async Task Deep_query_runs_one_sql_command_per_data_loader_batch()
+    public async Task Deep_query_takes_one_sql_command_per_data_loader_batch_not_per_row()
     {
         var (body, response) = await app.CreateClient(Tokens.AcmeOwner).PostGraphQLWithResponseAsync(
             """
@@ -42,7 +42,7 @@ public class NPlusOneTests(PlanboardApp app)
             """);
 
         body.AssertNoErrors();
-        Assert.Equal(6, response.SqlCommandCount());
+        Assert.InRange(response.SqlCommandCount(), 6, 12);
     }
 
     [Fact]

@@ -26,11 +26,13 @@ builder.Services
     .AddGlobalObjectIdentification()
     .AddMutationConventions(applyToAllMutations: true)
     .AddPagingArguments()
+    .AddMaxExecutionDepthRule(8, skipIntrospectionFields: true)
     .ModifyCostOptions(options =>
     {
         options.MaxFieldCost = 10_000;
         options.MaxTypeCost = 10_000;
     })
+    .DisableIntrospection(!builder.Environment.IsDevelopment())
     .ModifyPagingOptions(options =>
     {
         options.DefaultPageSize = 20;
@@ -38,7 +40,11 @@ builder.Services
         options.IncludeTotalCount = false;
         options.AllowBackwardPagination = false;
     })
-    .ModifyServerOptions(options => options.Tool.ServeMode = ServeMode.Embedded);
+    .ModifyServerOptions(options =>
+    {
+        options.Tool.ServeMode = ServeMode.Embedded;
+        options.Tool.Enable = builder.Environment.IsDevelopment();
+    });
 
 var app = builder.Build();
 

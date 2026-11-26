@@ -34,3 +34,6 @@ security apply to them like to any other query.
   `NPlusOneTests` fail if a resolver bypasses a DataLoader.
 - Nested lists are paged (`first` at most 50), so one parent never loads an unbounded number of children.
 - The same key loaded at two depths (assignees, then comment authors) is two batches, not one.
+- A batch is sent once no new keys arrive for a short moment (Hot Chocolate's default is 250 µs). Under CPU load a
+  batch can split in two, so the tests allow up to twice the batch count instead of an exact number. A real N+1
+  regression adds one command per row, which is far above that bound.
